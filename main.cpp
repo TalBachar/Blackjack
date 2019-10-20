@@ -35,7 +35,7 @@ int main(){
   Blackjack b(funds, minimum);
 
 
-  for (int i=0; i<5; i++) {
+  for (int i=0; i<1000; i++) {
     if (b.getFunds() == 0) {
       cout << "You do not have enogh money to play. Good bye!" << endl;
       break;
