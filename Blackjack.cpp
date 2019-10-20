@@ -110,7 +110,7 @@ using namespace std;
       if (action =='D' || action =='d') {
         if (getFunds() < getBetAmount()*2) { // if insufficient funds for DD
           cout << "You do not have enough chips to double-down. Choose another action:" << endl;
-          cout << "(H)hit / (S)stand";
+          cout << "(H)hit / (S)stand: ";
           if (playerCardsArr[0] == playerCardsArr[1]) {cout << " / (P)split";}
           cin >> action;
         } //end of insufficient funds for DD
