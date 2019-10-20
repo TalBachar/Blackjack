@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
 #include"Blackjack.hpp"
 
 using namespace std;
@@ -12,28 +11,31 @@ using namespace std;
   minimum_(minimum)
   {}
 
-  int Blackjack::bet(){
-  setBJhand(false);
-  int betAmount;
-  cout << "** At any point - press Ctrl+C to quit **" << endl;
-  cout << "Place your bets! Remember, the minimum in this table is " << getMinimum() << "$." << endl;
-  cout << "That means you can bet on " << getMinimum() <<"$, " << getMinimum()*2 << "$, " << getMinimum()*3 << "$ and so on ";
-  cout << "[Funds: " <<getFunds() << "]: ";
-  cin >> betAmount;
-  while (betAmount < getMinimum() && betAmount < 10) {
-    cout << "\nYour bet is lower than the minimum! Place a bet of at least " << getMinimum() << "$ please: ";
-    cin >> betAmount;
-  }
-  while (betAmount % getMinimum() != 0) {
-    cout << "Your bet must be a multiple of " << getMinimum() << ". please place your bet: ";
-    cin >> betAmount;
-  }
-  while (betAmount > getFunds()) {
-    cout << "\nYou don't have enough chips for that bet! please place your bet: ";
-    cin >> betAmount;
-  }
-  return betAmount;
+  void Blackjack::bet(int bet){
+    setBJhand(false);
+    cout << "** At any point - press Ctrl+C to quit **" << endl;
+    cout << "Place your bets! Remember, the minimum in this table is " << getMinimum() << "$." << endl;
+    cout << "That means you can bet on " << getMinimum() <<"$, " << getMinimum()*2 << "$, " << getMinimum()*3 << "$ and so on ";
+    cout << "[Funds: " <<getFunds() << "]: ";
+    cin >> bet;
+    while (bet < getMinimum()) {
+      cout << "\nYour bet is lower than the minimum! Place a bet of at least " << getMinimum() << "$ please: ";
+      cin >> bet;
+    }
+    while (bet % getMinimum() != 0) {
+      cout << "Your bet must be a multiple of " << getMinimum() << ". please place your bet: ";
+      cin >> bet;
+    }
+    bet_amount_ = bet;
   } //end bet()
+
+  void Blackjack::setBetAmount (int bet) {
+    bet_amount_ = bet;
+  }
+
+  int Blackjack::getBetAmount(){
+    return bet_amount_;
+  }
 
   int Blackjack::pullCard() {
     int card = rand() % 13 + 1;
@@ -106,14 +108,14 @@ using namespace std;
 
       //---------------------Double down--------------------
       if (action =='D' || action =='d') {
-        if (getFunds() < bet*2) { // if insufficient funds for DD
+        if (getFunds() < getBetAmount()*2) { // if insufficient funds for DD
           cout << "You do not have enough chips to double-down. Choose another action:" << endl;
           cout << "(H)hit / (S)stand";
           if (playerCardsArr[0] == playerCardsArr[1]) {cout << " / (P)split";}
           cin >> action;
         } //end of insufficient funds for DD
-        else if (getFunds() >= bet*2) {
-          bet = bet*2;
+        else if (getFunds() >= getBetAmount()*2) {
+          setBetAmount(getBetAmount()*2);
           cout << "Double Down! Card is: ";
           playerCardsArr[2] = pullCard();
           sumCards = playerCardsArr[0] + playerCardsArr[1] + playerCardsArr[2];
@@ -160,6 +162,8 @@ using namespace std;
           cout << "Press (S)stand, or any other key to hit again: ";
           cin >> action;
           if (action == 's' || action =='S') {
+            if (playerCardsArr[0] == 1 || playerCardsArr[1] == 1) { //if one of the cards is an ace
+              sumCards = sumCards+10;  }     //sumCards will be the higher option with an ace
             return sumCards;
           }
 
@@ -175,12 +179,12 @@ using namespace std;
 
   void Blackjack::setBJhand(bool hand_of_21){
     hand_of_21_ = hand_of_21;
-  }//end of setBJhand()
+  }//end setBJhand()
 
   bool Blackjack::getBJhand() {
     return hand_of_21_;
 
-  }//end of getBJhand()
+  }//end getBJhand()
 
   void Blackjack::dealerInitial() {
     int firstCard = pullCard(); //Dealer's first card
@@ -228,23 +232,23 @@ using namespace std;
           cout << " / " << dealerSum+10 << "]" << endl;  //show dealerSum 11 w/ Ace option
         }
         else {cout << "]" << endl;}
-        if (dealerArr[0] == 1 || dealerArr[1] == 1) {
-          if (7 < dealerSum && dealerSum < 12) {
-            dealerSum = dealerSum+10;
+        if (dealerArr[0] == 1 || dealerArr[1] == 1) { //if one of dealer's cards is ace
+          if (7 < dealerSum && dealerSum < 12) {  //if dealer has >soft 17
+            dealerSum = dealerSum+10;   //dealerSum will be the higher amount w/ ace
             return dealerSum;
           }
         }
         for (int i=2; i<21; i++) {
-          if (dealerSum > 21) {
+          if (dealerSum > 21) {     //if dealerSum >21
             cout << "Dealer busts with " << dealerSum << endl;
             return dealerSum;
           }
-          else if (dealerSum >= 17) {
+          else if (dealerSum >= 17) {   //if 16<dealerSum<21 dealer stands
             cout << "Dealer stands on " << dealerSum << endl;
             return dealerSum;
           }
           else {
-            cout << "Dealer hits! Card is ";
+            cout << "Dealer hits! Card is "; //dealer has >17
             dealerArr[i] = pullCard();
             dealerSum += dealerArr[i];
             cout << " [SUM: " << dealerSum << "]" << endl;
@@ -256,31 +260,31 @@ using namespace std;
     return 1;
   } //end of dealerFinal()
 
-  void Blackjack::decision(int dealerSum, int sumCards, int betAmount){
+  void Blackjack::decision(int dealerSum, int sumCards){
     if (getBJhand() == true) {          //if player has BJ, betAmount =+ *1.5
       cout << "Player wins!" << "\n\n";
-      setFunds(getFunds() + (betAmount*1.5));
+      setFunds(getFunds() + (getBetAmount()*1.5));
     }
 
     else if (getBJhand() == false) {    //if player doesn't have BJ
       if (sumCards > 21) {    //player busted
         cout << "Dealer wins! " << "\n\n";
-        setFunds(getFunds()-betAmount);
+        setFunds(getFunds()-getBetAmount());
       }
 
       else if (dealerSum > 21) {  //dealer busted
         cout << "Player wins! " << "\n\n";
-        setFunds(getFunds() + betAmount);
+        setFunds(getFunds() + getBetAmount());
       }
 
       else if (sumCards > dealerSum) {  //player>dealer, but still under 21
         cout << "Player wins! " << "\n\n";
-        setFunds(getFunds() + betAmount);
+        setFunds(getFunds() + getBetAmount());
       }
 
       else if (dealerSum > sumCards) {  //dealer > player, but still under 21
         cout << "Dealer wins! " << "\n\n";
-        setFunds(getFunds() - betAmount);
+        setFunds(getFunds() - getBetAmount());
       }
 
       else if (sumCards == dealerSum) { //push, nothing happens
